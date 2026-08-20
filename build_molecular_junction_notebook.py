@@ -25,6 +25,10 @@ CFG = {
     "left_layer_name": "ZnO",
     "interlayer_name": "SAM",
     "active_layer_name": "PM6:Y6",
+    "generate_molecular_figures": False,
+    "xyz_file": "",
+    "potential_dx_file": "",
+    "molecular_view_z_nm": 10.0,
 
     # Output
     "output_dir": Path.cwd() / "Molecular_Junction_Workflow_outputs",
@@ -475,24 +479,62 @@ manifest={k:(v.tolist() if isinstance(v,np.ndarray) else str(v) if isinstance(v,
 print('Complete. Outputs:',OUT.resolve()); display(summary.head())
 '''))
 
-# Embed every static/non-numerical manuscript asset so the notebook remains a
-# single-file archive. Running this final cell restores the exact workflow,
-# band-bending, molecular, PyMOL, and legacy comparison panels used by the DOCX.
-asset_names = ['Figure_01_workflow_or_cover.png','Figure_02_band_bending_scheme.png','Figure_09a_PyMOL_unrotated.png','Figure_09b_PyMOL_before.png','Figure_09c_PyMOL_after.png']
+# Only system-independent schematics are embedded. Molecular figures are always
+# generated from user-supplied XYZ and OpenDX potential files.
+asset_names = ['Figure_01_workflow_or_cover.png','Figure_02_band_bending_scheme.png']
 embedded={name:base64.b64encode((ROOT/'assets'/name).read_bytes()).decode('ascii') for name in asset_names}
 payload=json.dumps(embedded,separators=(',',':'))
-cells.append(md('''## 8. Static schematics and molecular render views\n\nThe workflow and band-bending scheme are embedded for reproducible restoration. The packaged molecular views belong specifically to the default Y6 example; for another molecule they are not used or relabeled. Every numerical curve is regenerated from the current GUI inputs by the calculation cells above.\n'''))
+cells.append(md('''## 8. Schematics and optional molecular figures\n\nOnly the system-independent workflow and band-bending schematics are embedded. Molecular figures are generated only when the corresponding flag is enabled and matching XYZ geometry and OpenDX electrostatic-potential files are supplied.\n'''))
 cells.append(code("""import base64\nMANUSCRIPT_ASSETS = json.loads(r'''"""+payload+"""''')\nfor filename,encoded in MANUSCRIPT_ASSETS.items():\n    (FIG/filename).write_bytes(base64.b64decode(encoded))\nprint(f'Restored {len(MANUSCRIPT_ASSETS)} exact manuscript assets to {FIG}')\n"""))
 
-cells.append(code(r'''# Figure 14b: packaged views are valid only for the default Y6 geometry
-if CFG['molecule_name'].strip().casefold() == 'y6':
- views=[('Figure_09a_PyMOL_unrotated.png','Unrotated'),('Figure_09b_PyMOL_before.png','Minimum orientation 1'),('Figure_09c_PyMOL_after.png','Minimum orientation 2')]
- fig,ax=plt.subplots(1,3,figsize=(190/25.4,68/25.4))
- for i,(name,title) in enumerate(views):
-  ax[i].imshow(plt.imread(FIG/name));ax[i].set_title(f"{CFG['molecule_name']}: {title}");ax[i].axis('off')
- letters(ax);fig.tight_layout(rect=(.01,.01,.99,.98));save(fig,'14b_positioned_Y6_views');plt.show()
-else:
- print(f"Skipping packaged Y6 views for custom molecule {CFG['molecule_name']!r}. Supply molecule-specific rendered views before report generation.")
+cells.append(code(r'''# Figure 14b: user-requested molecule/orientation figure from XYZ + OpenDX
+def _read_xyz(path):
+ lines=Path(path).read_text(errors='replace').splitlines(); start=2 if lines and lines[0].strip().isdigit() else 0; atoms=[]
+ for line in lines[start:]:
+  p=line.split()
+  if len(p)>=4:
+   try: atoms.append((p[0],*[float(x) for x in p[1:4]]))
+   except ValueError: pass
+ if not atoms: raise ValueError('No Cartesian atoms found in XYZ file')
+ return [a[0] for a in atoms],np.array([a[1:] for a in atoms],float)
+def _read_dx(path):
+ lines=Path(path).read_text(errors='replace').splitlines(); counts=origin=None; deltas=[]; vals=[]; data=False
+ for line in lines:
+  p=line.split()
+  if line.startswith('object 1') and 'counts' in p: counts=tuple(map(int,p[-3:]))
+  elif line.startswith('origin'): origin=np.array(list(map(float,p[1:4])))
+  elif line.startswith('delta') and len(deltas)<3:deltas.append(np.array(list(map(float,p[1:4]))))
+  elif 'data follows' in line:data=True
+  elif data:
+   for x in p:
+    try: vals.append(float(x))
+    except ValueError: pass
+ if counts is None or origin is None or len(deltas)!=3: raise ValueError('Incomplete OpenDX grid header')
+ arr=np.array(vals[:np.prod(counts)]).reshape(counts); return origin,np.array(deltas),arr
+def _sample_dx(points,origin,deltas,grid):
+ basis=deltas.T; ijk=(points-origin)@np.linalg.inv(basis).T; idx=np.rint(ijk).astype(int)
+ idx=np.clip(idx,[0,0,0],np.array(grid.shape)-1); return grid[idx[:,0],idx[:,1],idx[:,2]]
+def _align(a,b):
+ a=a/np.linalg.norm(a);b=b/np.linalg.norm(b);v=np.cross(a,b);c=np.dot(a,b)
+ if np.linalg.norm(v)<1e-12:return np.eye(3) if c>0 else np.diag([1,-1,-1])
+ K=np.array([[0,-v[2],v[1]],[v[2],0,-v[0]],[-v[1],v[0],0]]);return np.eye(3)+K+K@K*((1-c)/(v@v))
+if CFG.get('generate_molecular_figures',False):
+ xyzp=Path(CFG['xyz_file']);dxp=Path(CFG['potential_dx_file'])
+ if not xyzp.is_file() or not dxp.is_file():raise FileNotFoundError('Molecular figures require existing XYZ and OpenDX potential files')
+ elements,coords=_read_xyz(xyzp); origin,deltas,grid=_read_dx(dxp); esp=_sample_dx(coords,origin,deltas,grid); coords-=coords.mean(axis=0)
+ zsel=float(CFG.get('molecular_view_z_nm',10)); selected=states.iloc[(states.z_nm-zsel).abs().argsort()].groupby('state',sort=True).first().head(2)
+ targets=[mu/np.linalg.norm(mu)]+[r[['nx','ny','nz']].to_numpy(float) for _,r in selected.iterrows()]
+ titles=['Input orientation']+[f'Minimum orientation {i+1} at z={zsel:g} nm' for i in range(len(targets)-1)]
+ fig,axs=plt.subplots(1,len(targets),figsize=(190/25.4,62/25.4),squeeze=False);axs=axs[0]
+ lim=max(np.ptp(coords[:,0]),np.ptp(coords[:,1]))*.62
+ for i,(target,title) in enumerate(zip(targets,titles)):
+  R=_align(mu,target); cr=coords@R.T; mur=(mu/np.linalg.norm(mu))@R.T; a=axs[i]
+  a.scatter(cr[:,0],cr[:,1],c=esp,cmap='bwr_r',vmin=-.08,vmax=.08,s=18,edgecolors='.35',linewidths=.15)
+  a.arrow(0,0,mur[0]*lim*.75,mur[1]*lim*.75,width=lim*.018,head_width=lim*.10,color='#7A1FA2',length_includes_head=True)
+  a.axhline(0,color='.75',lw=.5);a.axvline(0,color='.75',lw=.5);a.set(xlim=(-lim,lim),ylim=(-lim,lim),aspect='equal',title=f"{CFG['molecule_name']}: {title}",xlabel='x (Å)',ylabel='y (Å)')
+ letters(axs);fig.tight_layout();save(fig,'14b_positioned_molecular_views');plt.show()
+ print('Generated molecular orientation figure from',xyzp,'and',dxp)
+else: print('Optional molecular-figure generation is disabled.')
 '''))
 
 nb={"cells":cells,"metadata":{"kernelspec":{"display_name":"Python 3","language":"python","name":"python3"},"language_info":{"name":"python","version":"3"}},"nbformat":4,"nbformat_minor":5}

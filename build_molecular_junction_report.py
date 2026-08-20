@@ -101,10 +101,12 @@ for name,cap in [('14_three_orientation_energy_minima.png','Three distinct minim
  p=figs/name
  if p.exists(): fig_no+=1; picture(p,f'Figure {fig_no}. {cap}',2.56 if name=='14_three_orientation_energy_minima.png' else 6.05)
 doc.add_heading(f'4.1 Positioned {molecule} molecular views',2)
-doc.add_paragraph(f'The unrotated {molecule} geometry and two selected minimum-energy orientations are shown in the common molecular/device Cartesian frame. The arrow denotes the ground-state dipole moment, not a transition dipole moment.')
-p=figs/'14b_positioned_Y6_views.png'
-if molecule.casefold()=='y6' and p.exists(): fig_no+=1; picture(p,f'Figure {fig_no}. Unrotated {molecule} and two positioned minimum-energy molecular views.',6.05)
-elif molecule.casefold()!='y6': doc.add_paragraph(f'The packaged Y6 render is intentionally omitted for custom molecule {molecule}; supply molecule-specific views generated from its own XYZ geometry and tensors.')
+if cfg.get('generate_molecular_figures',False):
+ doc.add_paragraph(f'The input {molecule} geometry and selected minimum-energy orientations are generated from the user-supplied XYZ and matching OpenDX electrostatic potential. The arrow denotes the ground-state dipole moment, not a transition dipole moment.')
+ p=figs/'14b_positioned_molecular_views.png'
+ if p.exists(): fig_no+=1; picture(p,f'Figure {fig_no}. Input geometry and selected minimum-energy orientations of {molecule}, colored by the supplied electrostatic potential.',6.05)
+else:
+ doc.add_paragraph('Optional molecular-figure generation was disabled for this run; no substance-specific molecular asset was inserted.')
 
 doc.add_heading('5. Anisotropic force and drift',1)
 equation("F_μ = μ_eff E′,    F_α = α_eff E E′,    F_Q = ⅙ Q_eff E″")

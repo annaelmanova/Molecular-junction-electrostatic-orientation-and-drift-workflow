@@ -2,7 +2,7 @@
 
 Reproducible GUI and single-notebook workflow for one-dimensional molecular-junction electrostatics, isotropic force/drift analysis, and exponential-field anisotropic orientation calculations. Defaults reproduce the Y6/ZnO/SAM/PM6:Y6 system.
 
-The molecule name and the left-layer, interlayer, and active-layer names are editable in the GUI or `CFG` cell. They propagate to device-strip labels, run metadata, and report text. The bundled molecular render images are specific to Y6 and are deliberately skipped when a different molecule name is selected; provide renders generated from that molecule's own XYZ geometry and tensors.
+The molecule name and the left-layer, interlayer, and active-layer names are editable in the GUI or `CFG` cell. They propagate to device-strip labels, run metadata, and report text. Molecular figures are not bundled assets: enable them explicitly and provide an XYZ geometry plus a matching OpenDX electrostatic-potential file. The notebook then plots the input geometry and selected calculated minimum-energy orientations.
 
 ## What the workflow produces
 
@@ -26,7 +26,7 @@ All numerical plots are regenerated from the GUI inputs. Anisotropic calculation
 | `build_molecular_junction_notebook.py` | Rebuilds the notebook from source cells and embedded assets. |
 | `build_molecular_junction_report.py` | Creates the structured Word report from a completed run. |
 | `repair_molecular_junction_run.py` | Recreates a configured notebook from a saved run configuration. |
-| `assets/` | Workflow, junction, and default-example orientation render assets. |
+| `assets/` | System-independent workflow and junction schematics. |
 | `examples/sample_user_inputs.json` | Example parameter configuration. |
 
 ## Installation
