@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: "Molecular junction electrostatic orientation and drift workflow"
+message: "If you use this software, please cite the repository and associated publication."
+type: software
+authors:
+  - family-names: "ADD_FAMILY_NAME"
+    given-names: "ADD_GIVEN_NAME"
+version: "1.0.0"
+date-released: "2026-08-20"
+repository-code: "ADD_REPOSITORY_URL"

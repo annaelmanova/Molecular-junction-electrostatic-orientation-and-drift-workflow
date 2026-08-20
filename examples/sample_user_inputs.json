@@ -1,0 +1,98 @@
+{
+  "molecule_name": "Y6",
+  "left_layer_name": "ZnO",
+  "interlayer_name": "SAM",
+  "active_layer_name": "PM6:Y6",
+  "save_png": true,
+  "save_pdf": true,
+  "dpi": 300,
+  "boltzmann_chunk": 128,
+  "active_layer_nm": 100.0,
+  "plot_zmax_nm": 50.0,
+  "z_step_nm": 0.1,
+  "V_bi_V": 0.85,
+  "delta_phi_ZnO_V": 0.3,
+  "lambda_ZnO_nm": 30.0,
+  "lambda_SAM_nm": 30.0,
+  "temperature_K": 418.15,
+  "orientation_temperature_K": 418.15,
+  "Vapp_sweep_V": [
+    1.0,
+    0.0,
+    -1.0,
+    -5.0
+  ],
+  "SAM_sweep_V": [
+    -2.0,
+    -0.7,
+    0.7,
+    2.0
+  ],
+  "lambda_sweep_nm": [
+    10.0,
+    20.0,
+    30.0
+  ],
+  "lambda_SAM_sweep_nm": [
+    10.0,
+    20.0,
+    30.0
+  ],
+  "diffusion_m2_s": [
+    1e-19,
+    1e-18,
+    1e-17
+  ],
+  "times_min": [
+    10.0,
+    60.0
+  ],
+  "representative_Vapp_V": [
+    0.0,
+    -5.0
+  ],
+  "derivative_SAM_V": [
+    -0.7,
+    0.7
+  ],
+  "orientation_samples": 8192,
+  "mu_D": [
+    11.4904,
+    -0.2662,
+    -0.9078
+  ],
+  "alpha_A3": [
+    [
+      331.972,
+      -24.94,
+      -27.115
+    ],
+    [
+      -24.94,
+      199.188,
+      6.388
+    ],
+    [
+      -27.115,
+      6.388,
+      106.596
+    ]
+  ],
+  "Q_DA": [
+    [
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ]
+}
