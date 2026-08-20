@@ -34,7 +34,7 @@ All numerical plots are regenerated from the GUI inputs. Anisotropic calculation
 Python 3.10 or newer is recommended.
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/annaelmanova/Molecular-junction-electrostatic-orientation-and-drift-workflow.git
 cd Molecular_Junction_Workflow
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
@@ -116,4 +116,4 @@ Archive the configured notebook, `user_inputs.json`, QC input, XYZ geometry, CSV
 
 ## License and citation
 
-No license has been selected in this package. Add an appropriate `LICENSE` file before public release. Update `CITATION.cff` with the author names, repository URL, and release DOI when available.
+The software authors are Anna Elmanova, Nhi Phan, Harald Hoppe, and Martin Presselt; they are recorded in `CITATION.cff` together with the repository URL. No license has yet been selected, so add an appropriate `LICENSE` file before public release. Add the release DOI to `CITATION.cff` when it becomes available.
